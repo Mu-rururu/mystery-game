@@ -1,0 +1,32 @@
+{
+  "sceneId": "prologue_001",
+
+  "dialogues": [
+    {
+      "speaker": "주인공",
+      "character": "protagonist",
+      "text": "여기는... 어디지?"
+    },
+    {
+      "speaker": "???",
+      "character": "unknown",
+      "text": "드디어 깨어났구나."
+    },
+    {
+      "speaker": "주인공",
+      "character": "protagonist",
+      "text": "누구야? 모습을 보여!"
+    },
+    {
+      "speaker": "???",
+      "character": "unknown",
+      "text": "곧 모든 것을 알게 될 거야."
+    }
+  ],
+
+  "nextEvent": {
+    "scene": "event_001.json",
+    "transition": "fade",
+    "duration": 800
+  }
+}

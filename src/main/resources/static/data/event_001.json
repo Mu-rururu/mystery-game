@@ -1,0 +1,15 @@
+{
+  "sceneId": "event_001",
+  "dialogues": [
+    {
+      "speaker": "주인공",
+      "character": "protagonist",
+      "text": "방금 그 목소리는 대체 뭐였지?"
+    },
+    {
+      "speaker": "주인공",
+      "character": "protagonist",
+      "text": "일단 주변을 살펴봐야겠어."
+    }
+  ]
+}

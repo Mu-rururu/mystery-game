@@ -124,3 +124,31 @@ body {
 
     color: #ff4775;
 }
+
+.character-protagonist {
+    background-color: #315b83 !important;
+}
+
+.character-unknown {
+    background-color: #71334f !important;
+}
+
+/* 화면 전환 레이어 */
+
+#transition-overlay {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: black;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 9999;
+}
