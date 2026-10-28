@@ -1,11 +1,13 @@
 export class SceneManager {
 
-    constructor(dialogueManager, transitionManager) {
+    constructor(dialogueManager, transitionManager, visualManager) {
 
         this.dialogueManager = dialogueManager;
 
         this.transitionManager = transitionManager;
 
+		this.visualManager = visualManager;
+		
         this.currentScene = null;
 
         this.isLoading = false;
@@ -41,15 +43,21 @@ export class SceneManager {
 
             const sceneData = await this.fetchScene(fileName);
 
-            const applyScene = async () => {
+			const applyScene = async () => {
 
-                this.currentScene = sceneData;
+			    this.currentScene = sceneData;
 
-                this.dialogueManager.loadDialogues(
-                    sceneData.dialogues,
-                    () => this.onSceneComplete()
-                );
-            };
+			    this.visualManager.hideCharacter();
+
+			    this.visualManager.setBackground(
+			        sceneData.background
+			    );
+
+			    this.dialogueManager.loadDialogues(
+			        sceneData.dialogues,
+			        () => this.onSceneComplete()
+			    );
+			};
 
             if (useTransition) {
 
@@ -95,8 +103,7 @@ export class SceneManager {
             return;
         }
 
-        const useTransition =
-            nextEvent.transition === "fade";
+        const useTransition = nextEvent.transition === "fade";
 
         await this.loadScene(
             nextEvent.scene,

@@ -66,7 +66,7 @@ body {
     );
 }
 
-/* 임시 캐릭터 */
+/* 캐릭터 표시 영역 */
 
 #character {
     position: absolute;
@@ -76,14 +76,45 @@ body {
 
     transform: translateX(-50%);
 
-    width: 250px;
-    height: 400px;
-
-    background-color: #555;
+    width: 350px;
+    height: 500px;
 
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
+
+    background-color: transparent;
+
+    white-space: pre-line;
+    text-align: center;
+
+    pointer-events: none;
+}
+
+/* 캐릭터 이미지 */
+
+.character-image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+    object-position: center bottom;
+}
+
+/* 이미지가 없을 때 임시 표시 */
+
+.character-placeholder {
+    background-color: #555 !important;
+    align-items: center !important;
+}
+
+.placeholder-text {
+    color: white;
+    font-size: 22px;
+    text-align: center;
+    white-space: pre-line;
 }
 
 /* 대화창 */
@@ -125,14 +156,6 @@ body {
     color: #ff4775;
 }
 
-.character-protagonist {
-    background-color: #315b83 !important;
-}
-
-.character-unknown {
-    background-color: #71334f !important;
-}
-
 /* 화면 전환 레이어 */
 
 #transition-overlay {
@@ -151,4 +174,108 @@ body {
     pointer-events: none;
 
     z-index: 9999;
+}
+
+#character {
+    white-space: pre-line;
+    text-align: center;
+}
+
+/* ========================================
+   Phase 1-6A: 선택지 시스템
+======================================== */
+
+/* 선택지 전체 영역 */
+.choice-container {
+    position: absolute;
+    right: 2%;
+    bottom: 190px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 20;
+
+    /* 화면 밖으로 나가는 선택지를 숨김 */
+    overflow: hidden;
+}
+
+/* 개별 선택지 */
+.choice-item {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 2px solid #b71c46;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.88);
+    color: white;
+    font-size: 17px;
+    text-align: left;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateX(110%);
+    box-sizing: border-box;
+}
+
+/* 마우스 올렸을 때 */
+.choice-item:hover {
+    background-color: #6e1733;
+    border-color: #ff4775;
+}
+
+/* 선택한 항목 강조 */
+.choice-item.selected {
+    background-color: #b71c46;
+    border-color: white;
+}
+
+/* 오른쪽에서 등장 */
+@keyframes choice-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 오른쪽으로 퇴장 */
+@keyframes choice-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+}
+
+/* 등장 애니메이션 */
+.choice-item.entering {
+    animation: choice-slide-in 0.3s ease-out forwards;
+}
+
+/* 퇴장 애니메이션 */
+.choice-item.exiting {
+    animation: choice-slide-out 0.3s ease-in forwards;
+}
+
+/* 작은 화면 대응 */
+@media (max-width: 700px) {
+
+    .choice-container {
+        width: 42%;
+        right: 2%;
+        bottom: 190px;
+    }
+
+    .choice-item {
+        font-size: 14px;
+        padding: 10px;
+    }
 }

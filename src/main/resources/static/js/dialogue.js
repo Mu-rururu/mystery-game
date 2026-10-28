@@ -1,11 +1,22 @@
 export class DialogueManager {
 
-    constructor(nameElement, textElement, characterElement) {
+	constructor(
+	    nameElement,
+	    textElement,
+	    characterElement,
+	    visualManager,
+	    choiceManager
+	) {
 
         this.nameElement = nameElement;
         this.textElement = textElement;
         this.characterElement = characterElement;
+		this.visualManager = visualManager;
+		this.choiceManager = choiceManager;
 
+		// 현재 선택지 처리 상태
+		this.isChoicePending = false;
+		
         this.dialogues = [];
         this.currentIndex = 0;
 
@@ -21,9 +32,11 @@ export class DialogueManager {
 
         this.stopTyping();
 
-        this.dialogues = dialogues;
-        this.currentIndex = 0;
-        this.onComplete = onComplete;
+		this.dialogues = dialogues;
+		this.currentIndex = 0;
+		this.onComplete = onComplete;
+
+		this.isChoicePending = false;
 
         if (this.dialogues.length > 0) {
             this.showDialogue();
@@ -41,11 +54,7 @@ export class DialogueManager {
 
         this.nameElement.textContent = dialogue.speaker;
 
-        this.characterElement.textContent = dialogue.character;
-
-		this.characterElement.className = "";
-
-		this.characterElement.classList.add("character-" + dialogue.character);
+        this.visualManager.applyVisual(dialogue.visual);
 		
         this.currentText = dialogue.text;
 
@@ -63,39 +72,76 @@ export class DialogueManager {
 
             if (charIndex >= this.currentText.length) {
                 this.stopTyping();
+				this.onTypingComplete();
             }
-
         }, 35);
     }
 
-    // 다음 대사 진행
-    next() {
+	// 대사 타이핑 완료 후 실행
+	onTypingComplete() {
 
-		if (this.dialogues.length === 0) {
-		    return;
-		}
-		
-        if (this.isTyping) {
+	    const dialogue = this.dialogues[this.currentIndex];
 
-            this.stopTyping();
+	    if (!dialogue) {
+	        return;
+	    }
 
-            this.textElement.textContent = this.currentText;
+	    // 선택지가 없으면 기존 대화 방식 유지
+	    if (!Array.isArray(dialogue.choices) ||
+	        dialogue.choices.length === 0) {
+	        return;
+	    }
 
-            return;
-        }
+	    // 중복 실행 방지
+	    if (this.isChoicePending) {
+	        return;
+	    }
 
-        this.currentIndex++;
+	    this.isChoicePending = true;
 
-        if (this.currentIndex < this.dialogues.length) {
+	    // 선택지 표시
+	    this.choiceManager.showChoices(
+	        dialogue.choices,
+	        (choiceId) => this.onChoiceComplete(choiceId)
+	    );
+	}
+	
+	// 선택지 퇴장 완료 후 실행
+	onChoiceComplete(choiceId) {
 
-            this.showDialogue();
+	    console.log("대화 시스템에서 받은 선택:", choiceId);
 
-        } else {
+	    this.isChoicePending = false;
 
-            this.finishDialogue();
-        }
-    }
+	    // Phase 1-6B에서는 모든 선택지가 공통 대사로 진행
+	    this.advanceDialogue();
+	}
+	
+	// 대화창 클릭 처리
+	next() {
 
+	    if (this.dialogues.length === 0) {
+	        return;
+	    }
+
+	    // 선택지가 표시 중이면 대화 진행 차단
+	    if (this.isChoicePending) {
+	        return;
+	    }
+
+	    // 타이핑 중 클릭하면 문장 전체 표시
+	    if (this.isTyping) {
+	        this.stopTyping();
+	        this.textElement.textContent = this.currentText;
+
+	        // 타이핑을 건너뛰어도 선택지는 표시해야 함
+	        this.onTypingComplete();
+	        return;
+	    }
+	    // 일반 대사 진행
+	    this.advanceDialogue();
+	}
+	
     // 타이핑 중지
     stopTyping() {
 
@@ -108,6 +154,18 @@ export class DialogueManager {
 
         this.isTyping = false;
     }
+	
+	// 실제 다음 대사 진행
+	advanceDialogue() {
+
+	    this.currentIndex++;
+
+	    if (this.currentIndex < this.dialogues.length) {
+	        this.showDialogue();
+	    } else {
+	        this.finishDialogue();
+	    }
+	}
 
 	finishDialogue() {
 
@@ -118,8 +176,6 @@ export class DialogueManager {
 
 	    this.nameElement.textContent = "";
 	    this.textElement.textContent = "";
-
-	    this.characterElement.textContent = "";
 
 	    if (this.onComplete) {
 
