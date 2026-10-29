@@ -1,9 +1,10 @@
+import { GameStateManager } from "./gameStateManager.js";
 import { ChoiceManager } from "./choiceManager.js";
 import { VisualManager } from "./visualManager.js";
 import { DialogueManager } from "./dialogue.js";
 import { TransitionManager } from "./transition.js";
 import { SceneManager } from "./sceneManager.js";
-
+import { DialogueLogManager } from "./dialogueLogManager.js";
 
 // ========================================
 // HTML 요소
@@ -41,38 +42,35 @@ const choiceContainer =
 // 관리자 생성
 // ========================================
 
-// 캐릭터 및 배경 관리자
+const gameStateManager = new GameStateManager();
+
+const dialogueLogManager = new DialogueLogManager();
+
 const visualManager = new VisualManager(
     characterElement,
     gameScreen
 );
 
-// 선택지 관리자
-const choiceManager = new ChoiceManager(
-    choiceContainer
-);
+const choiceManager = new ChoiceManager(choiceContainer);
 
-// 대화 관리자
 const dialogueManager = new DialogueManager(
     speakerName,
     dialogueText,
     characterElement,
     visualManager,
-    choiceManager
+    choiceManager,
+    gameStateManager,
+	dialogueLogManager
 );
 
-// 화면 전환 관리자
-const transitionManager = new TransitionManager(
-    transitionOverlay
-);
+const transitionManager = new TransitionManager(transitionOverlay);
 
-// 장면 관리자
 const sceneManager = new SceneManager(
     dialogueManager,
     transitionManager,
-    visualManager
+    visualManager,
+    gameStateManager
 );
-
 
 // ========================================
 // 게임 시작
@@ -82,6 +80,11 @@ async function startGame() {
 
     startButton.disabled = true;
 
+    // 새 게임 시작 시 진행 상태 초기화
+    gameStateManager.reset();
+	// 대화 기록 초기화
+	dialogueLogManager.reset();
+	
     titleScreen.classList.add("hidden");
     gameScreen.classList.remove("hidden");
 
@@ -107,3 +110,11 @@ dialogueBox.addEventListener("click", () => {
 
     dialogueManager.next();
 });
+
+// ========================================
+// Phase 1-7: 게임 상태 테스트
+// ========================================
+
+// 개발 중 상태 확인용
+window.gameStateManager = gameStateManager;
+window.dialogueLogManager = dialogueLogManager;

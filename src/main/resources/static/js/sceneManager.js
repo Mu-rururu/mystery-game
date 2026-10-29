@@ -1,12 +1,16 @@
 export class SceneManager {
 
-    constructor(dialogueManager, transitionManager, visualManager) {
+	constructor(
+	    dialogueManager,
+	    transitionManager,
+	    visualManager,
+	    gameStateManager
+	) {
 
         this.dialogueManager = dialogueManager;
-
         this.transitionManager = transitionManager;
-
 		this.visualManager = visualManager;
+		this.gameStateManager = gameStateManager;
 		
         this.currentScene = null;
 
@@ -46,6 +50,9 @@ export class SceneManager {
 			const applyScene = async () => {
 
 			    this.currentScene = sceneData;
+				
+				// 현재 장면 기록
+				this.gameStateManager.setCurrentScene(fileName);
 
 			    this.visualManager.hideCharacter();
 
@@ -86,29 +93,32 @@ export class SceneManager {
     }
 
     // 현재 장면 종료
-    async onSceneComplete() {
+	async onSceneComplete() {
 
-        if (!this.isActive || this.isLoading) {
-            return;
-        }
+	    if (!this.isActive || this.isLoading) return;
 
-        this.isActive = false;
+	    this.isActive = false;
 
-        const nextEvent = this.currentScene?.nextEvent;
+	    // 현재 장면 완료 기록
+	    const completedScene = this.gameStateManager.getState().currentScene;
 
-        if (!nextEvent) {
+	    if (completedScene) {
+	        this.gameStateManager.completeEvent(completedScene);
+	    }
 
-            console.log("모든 장면 종료");
+	    const nextEvent = this.currentScene?.nextEvent;
 
-            return;
-        }
+	    if (!nextEvent) {
+	        console.log("모든 장면 종료");
+	        return;
+	    }
 
-        const useTransition = nextEvent.transition === "fade";
+	    const useTransition = nextEvent.transition === "fade";
 
-        await this.loadScene(
-            nextEvent.scene,
-            useTransition,
-            nextEvent.duration ?? 800
-        );
-    }
+	    await this.loadScene(
+	        nextEvent.scene,
+	        useTransition,
+	        nextEvent.duration ?? 800
+	    );
+	}
 }

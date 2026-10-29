@@ -5,7 +5,9 @@ export class DialogueManager {
 	    textElement,
 	    characterElement,
 	    visualManager,
-	    choiceManager
+	    choiceManager,
+		gameStateManager,
+		dialogueLogManager
 	) {
 
         this.nameElement = nameElement;
@@ -13,9 +15,16 @@ export class DialogueManager {
         this.characterElement = characterElement;
 		this.visualManager = visualManager;
 		this.choiceManager = choiceManager;
-
+		this.gameStateManager = gameStateManager;
+		this.dialogueLogManager = dialogueLogManager;
+		
 		// 현재 선택지 처리 상태
 		this.isChoicePending = false;
+		
+		// 선택지 분기 대화 상태
+		this.branchDialogues = [];
+		this.branchIndex = 0;
+		this.isInBranch = false;
 		
         this.dialogues = [];
         this.currentIndex = 0;
@@ -37,6 +46,10 @@ export class DialogueManager {
 		this.onComplete = onComplete;
 
 		this.isChoicePending = false;
+		
+		this.branchDialogues = [];
+		this.branchIndex = 0;
+		this.isInBranch = false;
 
         if (this.dialogues.length > 0) {
             this.showDialogue();
@@ -45,42 +58,64 @@ export class DialogueManager {
         }
     }
 
+	// 현재 출력할 대사 가져오기
+	getCurrentDialogue() {
+
+	    if (this.isInBranch) {
+	        return this.branchDialogues[this.branchIndex];
+	    }
+
+	    return this.dialogues[this.currentIndex];
+	}
+	
     // 현재 대사 출력
-    showDialogue() {
+	showDialogue() {
 
-        this.stopTyping();
+	    this.stopTyping();
 
-        const dialogue = this.dialogues[this.currentIndex];
+	    const dialogue = this.getCurrentDialogue();
 
-        this.nameElement.textContent = dialogue.speaker;
+	    if (!dialogue) {
+	        return;
+	    }
 
-        this.visualManager.applyVisual(dialogue.visual);
-		
-        this.currentText = dialogue.text;
+	    this.nameElement.textContent = dialogue.speaker;
 
-        this.textElement.textContent = "";
+	    this.visualManager.applyVisual(dialogue.visual);
 
-        this.isTyping = true;
+	    this.currentText = dialogue.text;
 
-        let charIndex = 0;
+	    this.textElement.textContent = "";
 
-        this.typingTimer = setInterval(() => {
+	    // 새로운 대사를 대화 기록에 저장
+	    this.dialogueLogManager.addLog(
+	        dialogue.speaker,
+	        dialogue.text
+	    );
 
-            this.textElement.textContent += this.currentText.charAt(charIndex);
+	    this.isTyping = true;
 
-            charIndex++;
+	    let charIndex = 0;
 
-            if (charIndex >= this.currentText.length) {
-                this.stopTyping();
-				this.onTypingComplete();
-            }
-        }, 35);
-    }
+	    this.typingTimer = setInterval(() => {
+
+	        this.textElement.textContent += this.currentText.charAt(charIndex);
+
+	        charIndex++;
+
+	        if (charIndex >= this.currentText.length) {
+
+	            this.stopTyping();
+	            this.onTypingComplete();
+	        }
+
+	    }, 35);
+	}
 
 	// 대사 타이핑 완료 후 실행
 	onTypingComplete() {
 
-	    const dialogue = this.dialogues[this.currentIndex];
+	    const dialogue = this.getCurrentDialogue();
 
 	    if (!dialogue) {
 	        return;
@@ -109,11 +144,32 @@ export class DialogueManager {
 	// 선택지 퇴장 완료 후 실행
 	onChoiceComplete(choiceId) {
 
-	    console.log("대화 시스템에서 받은 선택:", choiceId);
+	    console.log("선택한 항목:", choiceId);
 
 	    this.isChoicePending = false;
 
-	    // Phase 1-6B에서는 모든 선택지가 공통 대사로 진행
+	    const dialogue = this.getCurrentDialogue();
+
+	    // 선택지 ID가 설정되어 있다면 결과 저장
+	    if (dialogue?.choiceKey) {
+	        this.gameStateManager.recordChoice(
+	            dialogue.choiceKey,
+	            choiceId
+	        );
+	    }
+
+	    // 선택 결과에 따른 분기 대화
+	    const selectedBranch = dialogue?.branches?.[choiceId];
+
+	    if (Array.isArray(selectedBranch) && selectedBranch.length > 0) {
+
+	        this.branchDialogues = selectedBranch;
+	        this.branchIndex = 0;
+	        this.isInBranch = true;
+
+	        this.showDialogue();
+	        return;
+	    }
 	    this.advanceDialogue();
 	}
 	
@@ -158,11 +214,33 @@ export class DialogueManager {
 	// 실제 다음 대사 진행
 	advanceDialogue() {
 
+	    // 분기 대사 진행 중인 경우
+	    if (this.isInBranch) {
+
+	        this.branchIndex++;
+
+	        // 아직 출력할 분기 대사가 남아 있다면
+	        if (this.branchIndex < this.branchDialogues.length) {
+
+	            this.showDialogue();
+	            return;
+	        }
+
+	        // 분기 대사가 모두 끝났다면
+	        this.branchDialogues = [];
+	        this.branchIndex = 0;
+	        this.isInBranch = false;
+	    }
+
+	    // 공통 대사 진행
 	    this.currentIndex++;
 
 	    if (this.currentIndex < this.dialogues.length) {
+
 	        this.showDialogue();
+
 	    } else {
+
 	        this.finishDialogue();
 	    }
 	}
@@ -174,6 +252,12 @@ export class DialogueManager {
 	    this.dialogues = [];
 	    this.currentIndex = 0;
 
+		// 분기 상태 초기화
+		this.branchDialogues = [];
+		this.branchIndex = 0;
+		this.isInBranch = false;
+		this.isChoicePending = false;
+		
 	    this.nameElement.textContent = "";
 	    this.textElement.textContent = "";
 

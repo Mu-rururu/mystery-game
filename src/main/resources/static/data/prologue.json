@@ -34,6 +34,7 @@
 	  "visual": {
 	    "action": "hide"
 	  },
+	  "choiceKey": "prologue_choice_001",
 	  "choices": [
 	    {
 	      "id": "look",
@@ -47,7 +48,70 @@
 	      "id": "sleep",
 	      "text": "다시 잠을 청한다."
 	    }
-	  ]
+	  ],
+	  "branches": {
+	      "look": [
+	        {
+	          "speaker": "주인공",
+	          "text": "주변을 둘러봤지만 특별한 것은 보이지 않는다.",
+	          "visual": {
+	            "action": "show",
+	            "character": "protagonist",
+	            "expression": "normal"
+	          }
+	        },
+	        {
+	          "speaker": "주인공",
+	          "text": "이상해. 분명 누군가의 목소리가 들렸는데...",
+	          "visual": {
+	            "action": "keep"
+	          }
+	        }
+	      ],
+	      "door": [
+	        {
+	          "speaker": "주인공",
+	          "text": "일단 문을 열어보자.",
+	          "visual": {
+	            "action": "show",
+	            "character": "protagonist",
+	            "expression": "normal"
+	          }
+	        },
+	        {
+	          "speaker": "주인공",
+	          "text": "잠겨 있어. 밖으로 나갈 수 없겠는데?",
+	          "visual": {
+	            "action": "keep"
+	          }
+	        }
+	      ],
+	      "sleep": [
+	        {
+	          "speaker": "주인공",
+	          "text": "다시 잠들면 이 상황에서 벗어날 수 있을까?",
+	          "visual": {
+	            "action": "show",
+	            "character": "protagonist",
+	            "expression": "normal"
+	          }
+	        },
+	        {
+	          "speaker": "주인공",
+	          "text": "아니야. 지금은 상황을 파악하는 게 먼저야.",
+	          "visual": {
+	            "action": "keep"
+	          }
+	        }
+	      ]
+	    }
+	  },
+	  {
+	    "speaker": "주인공",
+	    "text": "어떤 방법을 선택하든 지금은 이곳에 대한 정보를 모아야겠어.",
+	    "visual": {
+	      "action": "keep"
+	    }
 	}
   ],
 
