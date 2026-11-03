@@ -279,3 +279,161 @@ body {
         padding: 10px;
     }
 }
+
+/* ========================================
+   Phase 1-8B: 대화 기록 UI
+======================================== */
+
+/* ========================================
+   Phase 1-9D-①: 게임 기능 버튼 UI
+======================================== */
+
+/* 게임 기능 버튼 전체 영역 */
+#game-menu {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    z-index: 30;
+}
+
+/* SAVE / LOAD / LOG 공통 디자인 */
+#game-menu button {
+    min-width: 86px;
+    padding: 10px 16px;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    border: 2px solid #b71c46;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* 마우스를 올렸을 때 */
+#game-menu button:hover {
+    background-color: #6e1733;
+}
+
+/* 버튼 클릭 시 */
+#game-menu button:active {
+    background-color: #b71c46;
+}
+
+/* 키보드로 버튼 선택 시 */
+#game-menu button:focus-visible {
+    outline: 2px solid #ff4775;
+    outline-offset: 3px;
+}
+
+#log-button:hover {
+    background-color: #6e1733;
+}
+
+/* 기록창 전체 배경 */
+#log-overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: rgba(0, 0, 0, 0.85);
+
+    z-index: 100;
+}
+
+/* 기록창 본체 */
+#log-panel {
+    width: 80%;
+    max-width: 900px;
+    height: 80%;
+
+    display: flex;
+    flex-direction: column;
+
+    background-color: #15151d;
+
+    border: 2px solid #b71c46;
+    border-radius: 6px;
+
+    padding: 25px;
+}
+
+/* 상단 제목 및 닫기 버튼 */
+#log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: 2px solid #b71c46;
+
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+#log-header h2 {
+    margin: 0;
+
+    color: #ff4775;
+    letter-spacing: 3px;
+}
+
+/* 닫기 버튼 */
+#log-close-button {
+    background: none;
+    border: none;
+
+    color: white;
+    font-size: 26px;
+
+    cursor: pointer;
+}
+
+#log-close-button:hover {
+    color: #ff4775;
+}
+
+/* 대화 기록 목록 */
+#log-list {
+    flex: 1;
+    min-height: 0;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    padding-right: 15px;
+}
+
+/* 개별 대화 기록 */
+.log-entry {
+    padding: 15px 10px;
+    margin-bottom: 15px;
+
+    border-bottom: 1px solid #444;
+}
+
+/* 화자 이름 */
+.log-speaker {
+    color: #ff4775;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    margin-bottom: 8px;
+}
+
+/* 대사 */
+.log-text {
+    color: white;
+
+    font-size: 17px;
+    line-height: 1.7;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

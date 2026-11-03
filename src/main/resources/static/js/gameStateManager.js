@@ -83,4 +83,41 @@ export class GameStateManager {
     getState() {
         return structuredClone(this.state);
     }
+
+    // 저장된 게임 상태 복원
+    restoreState(savedState) {
+
+        if (
+            !savedState ||
+            typeof savedState !== "object" ||
+            Array.isArray(savedState)
+        ) {
+            console.error("올바르지 않은 게임 상태 데이터입니다.");
+            return false;
+        }
+
+        // 필요한 데이터 구조 확인
+        if (
+            !Number.isInteger(savedState.chapter) ||
+            typeof savedState.phase !== "string" ||
+            (savedState.currentScene !== null &&
+                typeof savedState.currentScene !== "string") ||
+            !savedState.flags ||
+            typeof savedState.flags !== "object" ||
+            Array.isArray(savedState.flags) ||
+            !savedState.choices ||
+            typeof savedState.choices !== "object" ||
+            Array.isArray(savedState.choices) ||
+            !Array.isArray(savedState.evidence) ||
+            !Array.isArray(savedState.completedEvents)
+        ) {
+            console.error("게임 상태 데이터 구조가 올바르지 않습니다.");
+            return false;
+        }
+
+        // 기존 상태를 저장 데이터로 교체
+        this.state = structuredClone(savedState);
+
+        return true;
+    }
 }

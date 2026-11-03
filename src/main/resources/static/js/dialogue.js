@@ -25,15 +25,24 @@ export class DialogueManager {
 		this.branchDialogues = [];
 		this.branchIndex = 0;
 		this.isInBranch = false;
-		
+
+		// 현재 진행 중인 분기의 선택지 ID
+		this.branchChoiceId = null;
+
         this.dialogues = [];
         this.currentIndex = 0;
 
-        this.isTyping = false;
-        this.typingTimer = null;
+		this.isTyping = false;
+		this.typingTimer = null;
 
-        this.currentText = "";
-        this.onComplete = null;
+		// 현재 출력한 글자 위치
+		this.charIndex = 0;
+
+		// 타이핑 일시정지 상태
+		this.isPaused = false;
+
+		this.currentText = "";
+		this.onComplete = null;
     }
 
     // 대화 데이터 설정
@@ -51,6 +60,8 @@ export class DialogueManager {
 		this.branchIndex = 0;
 		this.isInBranch = false;
 
+		this.branchChoiceId = null;
+
         if (this.dialogues.length > 0) {
             this.showDialogue();
         } else {
@@ -67,9 +78,140 @@ export class DialogueManager {
 
 	    return this.dialogues[this.currentIndex];
 	}
-	
+
+	// 현재 대화 진행 상태 반환
+	getProgress() {
+
+		// 진행 중인 대화가 없다면 null 반환
+		if (this.dialogues.length === 0) {
+			return null;
+		}
+
+		return {
+			currentIndex: this.currentIndex,
+			isInBranch: this.isInBranch,
+			branchIndex: this.branchIndex,
+			branchChoiceId: this.branchChoiceId,
+
+			// 현재 타이핑 중인지 기록
+			isTyping: this.isTyping,
+
+			// 선택지 표시 상태
+			isChoicePending: this.isChoicePending
+		};
+	}
+
+	// 저장된 대화 진행 위치 복원
+	restoreProgress(savedProgress) {
+
+		// 선택지 애니메이션 중에는 복원 차단
+		if (
+			this.choiceManager.isAnimating ||
+			this.choiceManager.isSelecting
+		) {
+			console.warn("선택지 애니메이션 중에는 복원할 수 없습니다.");
+			return false;
+		}
+
+		if (
+			!savedProgress ||
+			typeof savedProgress !== "object" ||
+			Array.isArray(savedProgress)
+		) {
+			console.error("올바르지 않은 대화 진행 데이터입니다.");
+			return false;
+		}
+
+		// 현재 대화 데이터가 준비되어 있는지 확인
+		if (!Array.isArray(this.dialogues) || this.dialogues.length === 0) {
+			console.error("복원할 대화 데이터가 없습니다.");
+			return false;
+		}
+
+		const {
+			currentIndex,
+			isInBranch,
+			branchIndex,
+			branchChoiceId,
+			isTyping,
+			isChoicePending
+		} = savedProgress;
+
+		// 기본 진행 위치 검증
+		if (
+			!Number.isInteger(currentIndex) ||
+			currentIndex < 0 ||
+			currentIndex >= this.dialogues.length ||
+			typeof isInBranch !== "boolean" ||
+			!Number.isInteger(branchIndex) ||
+			branchIndex < 0 ||
+			typeof isTyping !== "boolean" ||
+			typeof isChoicePending !== "boolean"
+		) {
+			console.error("대화 진행 데이터 구조가 올바르지 않습니다.");
+			return false;
+		}
+
+		// 분기 대화 데이터 검증
+		let restoredBranch = [];
+
+		if (isInBranch) {
+
+			if (typeof branchChoiceId !== "string") {
+				console.error("분기 선택지 ID가 올바르지 않습니다.");
+				return false;
+			}
+
+			const parentDialogue = this.dialogues[currentIndex];
+
+			restoredBranch = parentDialogue?.branches?.[branchChoiceId];
+
+			if (
+				!Array.isArray(restoredBranch) ||
+				branchIndex >= restoredBranch.length
+			) {
+				console.error("분기 대화 데이터를 찾을 수 없습니다.");
+				return false;
+			}
+		}
+
+		// 기존 타이핑 중지
+		this.stopTyping();
+
+		// 이전 선택지 UI 초기화
+		this.choiceManager.container.replaceChildren();
+		this.choiceManager.container.classList.add("hidden");
+		this.choiceManager.onChoiceSelected = null;
+
+		// 저장된 진행 위치 적용
+		this.currentIndex = currentIndex;
+		this.isInBranch = isInBranch;
+		this.branchIndex = isInBranch ? branchIndex : 0;
+		this.branchChoiceId = isInBranch ? branchChoiceId : null;
+		this.branchDialogues = isInBranch ? restoredBranch : [];
+		this.isChoicePending = false;
+
+		// 현재 대사를 LOG 중복 없이 출력
+		this.showDialogue(false);
+
+		// 저장 시 타이핑이 끝난 상태였다면 전체 문장 표시
+		if (!isTyping) {
+
+			this.stopTyping();
+
+			this.textElement.textContent = this.currentText;
+
+			// 선택지가 표시된 상태였다면 다시 표시
+			if (isChoicePending) {
+				this.onTypingComplete();
+			}
+		}
+
+		return true;
+	}
+
     // 현재 대사 출력
-	showDialogue() {
+	showDialogue(addToLog = true) {
 
 	    this.stopTyping();
 
@@ -87,29 +229,79 @@ export class DialogueManager {
 
 	    this.textElement.textContent = "";
 
-	    // 새로운 대사를 대화 기록에 저장
-	    this.dialogueLogManager.addLog(
-	        dialogue.speaker,
-	        dialogue.text
-	    );
+		// 일반 진행에서만 LOG에 기록 추가
+		// 저장 데이터 복원 시에는 중복 기록 방지
+		if (addToLog) {
+			this.dialogueLogManager.addLog(
+				dialogue.speaker,
+				dialogue.text
+			);
+		}
 
-	    this.isTyping = true;
+		// 새로운 대사이므로 타이핑 위치 초기화
+		this.charIndex = 0;
+		this.isPaused = false;
 
-	    let charIndex = 0;
+		// 타이핑 시작
+		this.startTyping();
+	}
 
-	    this.typingTimer = setInterval(() => {
+	// 현재 위치부터 타이핑 시작
+	startTyping() {
 
-	        this.textElement.textContent += this.currentText.charAt(charIndex);
+		if (this.typingTimer !== null || this.isPaused) {
+			return;
+		}
 
-	        charIndex++;
+		this.isTyping = true;
 
-	        if (charIndex >= this.currentText.length) {
+		// 빈 문자열도 정상적으로 완료 처리
+		if (this.charIndex >= this.currentText.length) {
+			this.stopTyping();
+			this.onTypingComplete();
+			return;
+		}
 
-	            this.stopTyping();
-	            this.onTypingComplete();
-	        }
+		this.typingTimer = setInterval(() => {
 
-	    }, 35);
+			this.textElement.textContent +=
+				this.currentText.charAt(this.charIndex);
+
+			this.charIndex++;
+
+			if (this.charIndex >= this.currentText.length) {
+
+				this.stopTyping();
+				this.onTypingComplete();
+			}
+		}, 35);
+	}
+
+	// 타이핑 일시정지
+	pauseTyping() {
+
+		if (!this.isTyping || this.isPaused) {
+			return;
+		}
+
+		if (this.typingTimer !== null) {
+			clearInterval(this.typingTimer);
+			this.typingTimer = null;
+		}
+
+		this.isPaused = true;
+	}
+
+	// 일시정지한 타이핑 재개
+	resumeTyping() {
+
+		if (!this.isPaused) {
+			return;
+		}
+
+		this.isPaused = false;
+
+		this.startTyping();
 	}
 
 	// 대사 타이핑 완료 후 실행
@@ -167,6 +359,9 @@ export class DialogueManager {
 	        this.branchIndex = 0;
 	        this.isInBranch = true;
 
+			// 선택한 분기 ID 기록
+			this.branchChoiceId = choiceId;
+
 	        this.showDialogue();
 	        return;
 	    }
@@ -199,17 +394,18 @@ export class DialogueManager {
 	}
 	
     // 타이핑 중지
-    stopTyping() {
+	stopTyping() {
 
-        if (this.typingTimer !== null) {
+		if (this.typingTimer !== null) {
 
-            clearInterval(this.typingTimer);
+			clearInterval(this.typingTimer);
 
-            this.typingTimer = null;
-        }
+			this.typingTimer = null;
+		}
 
-        this.isTyping = false;
-    }
+		this.isTyping = false;
+		this.isPaused = false;
+	}
 	
 	// 실제 다음 대사 진행
 	advanceDialogue() {
@@ -230,6 +426,7 @@ export class DialogueManager {
 	        this.branchDialogues = [];
 	        this.branchIndex = 0;
 	        this.isInBranch = false;
+			this.branchChoiceId = null;
 	    }
 
 	    // 공통 대사 진행
@@ -257,7 +454,8 @@ export class DialogueManager {
 		this.branchIndex = 0;
 		this.isInBranch = false;
 		this.isChoicePending = false;
-		
+		this.branchChoiceId = null;
+
 	    this.nameElement.textContent = "";
 	    this.textElement.textContent = "";
 

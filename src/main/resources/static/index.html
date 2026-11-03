@@ -29,6 +29,23 @@
     <!-- 게임 화면 -->
     <div id="game-screen" class="screen hidden">
 
+        <!-- 게임 기능 버튼 영역 -->
+        <div id="game-menu">
+
+            <button id="save-button" type="button">
+                SAVE
+            </button>
+
+            <button id="load-button" type="button">
+                LOAD
+            </button>
+
+            <button id="log-button" type="button">
+                LOG
+            </button>
+
+        </div>
+
         <div id="character">CHARACTER</div>
 
 		<!-- 선택지 표시 영역 -->
@@ -41,6 +58,25 @@
             <p id="dialogue-text"></p>
 
             <span id="next-indicator">▼</span>
+
+        </div>
+
+        <!-- 대화 기록 화면 -->
+        <div id="log-overlay" class="hidden">
+
+            <div id="log-panel">
+
+                <div id="log-header">
+                    <h2>DIALOGUE LOG</h2>
+
+                    <button id="log-close-button" type="button">
+                        ✕
+                    </button>
+                </div>
+
+                <div id="log-list"></div>
+
+            </div>
 
         </div>
 
