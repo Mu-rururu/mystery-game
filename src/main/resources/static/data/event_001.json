@@ -19,5 +19,9 @@
         "action": "keep"
       }
     }
-  ]
+  ],
+  "nextMode": {
+    "type": "investigation",
+    "investigationId": "classroom_001"
+  }
 }

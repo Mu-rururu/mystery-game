@@ -1,0 +1,50 @@
+
+{
+  "investigationId": "classroom_001",
+  "targets": {
+    "desk": {
+      "dialogues": [
+        {
+          "speaker": "protagonist",
+          "text": "평범해 보이는 교실 책상이다."
+        },
+        {
+          "speaker": "protagonist",
+          "text": "자세히 보니 책상 아래에 열쇠가 떨어져 있다."
+        },
+        {
+          "speaker": "protagonist",
+          "text": "오래된 열쇠인가?"
+        }
+      ]
+    },
+    "blackboard": {
+      "dialogues": [
+        {
+          "speaker": "protagonist",
+          "text": "칠판에는 특별한 내용이 적혀 있지 않다."
+        }
+      ]
+    },
+    "door": {
+      "dialogues": [
+        {
+          "speaker": "protagonist",
+          "text": "교실 출입문이다."
+        },
+        {
+          "speaker": "protagonist",
+          "text": "밖으로 나가려면 이 문을 통과해야겠지."
+        }
+      ]
+    },
+    "window": {
+      "dialogues": [
+        {
+          "speaker": "protagonist",
+          "text": "창문이 있어야 할 위치로 추측되는 곳이 철판으로 막혀 있다."
+        }
+      ]
+    }
+  }
+}

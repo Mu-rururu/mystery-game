@@ -39,21 +39,85 @@ body {
     letter-spacing: 5px;
 }
 
-#start-button {
-    margin-top: 40px;
-    padding: 15px 50px;
+/* ========================================
+   Phase 1-9D-④-B: 타이틀 버튼 디자인
+======================================== */
 
-    background-color: #b71c46;
+/* NEW GAME / CONTINUE 공통 스타일 */
+#start-button,
+#continue-button {
+    width: 240px;
+    min-height: 54px;
+
+    padding: 15px 20px;
+
     color: white;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
 
-    border: none;
+    border-radius: 4px;
     cursor: pointer;
 
-    font-size: 20px;
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease;
 }
 
+/* NEW GAME 버튼 */
+#start-button {
+    margin-top: 40px;
+
+    background-color: #b71c46;
+    border: 2px solid #b71c46;
+}
+
+/* NEW GAME 호버 */
 #start-button:hover {
     background-color: #e52b5b;
+    border-color: #e52b5b;
+}
+
+/* CONTINUE 버튼 */
+#continue-button {
+    margin-top: 14px;
+
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 2px solid #b71c46;
+}
+
+/* CONTINUE 호버 */
+#continue-button:not(:disabled):hover {
+    background-color: #6e1733;
+    border-color: #ff4775;
+}
+
+/* CONTINUE 비활성화 */
+#continue-button:disabled {
+    background-color: #303035;
+    border-color: #55555d;
+    color: #888890;
+
+    cursor: not-allowed;
+}
+
+/* 키보드로 버튼 선택 시 */
+#start-button:focus-visible,
+#continue-button:focus-visible {
+    outline: 2px solid #ff4775;
+    outline-offset: 3px;
+}
+
+/* 마지막 저장 시각 */
+#last-save-time {
+    margin-top: 12px;
+    margin-bottom: 0;
+
+    color: #bdaeb7;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+
+    text-align: center;
 }
 
 /* 게임 화면 */
@@ -436,4 +500,129 @@ body {
 
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+/* ========================================
+   Phase 1-10B-②: 조사 모드 기본 UI
+======================================== */
+
+/* 조사 모드 전체 영역 */
+#investigation-container {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    /* 교실 배경 위에 배치 */
+    z-index: 10;
+
+    /* 조사 대상과 안내 문구의 기준 영역 */
+    pointer-events: none;
+}
+
+/* 조사 대상 표시 영역 */
+#investigation-hotspots {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    /* 실제 클릭 대상은 다음 단계에서 추가 */
+    pointer-events: none;
+}
+
+/* 조사 모드 안내 문구 */
+#investigation-hint {
+    position: absolute;
+
+    left: 50%;
+    bottom: 35px;
+
+    transform: translateX(-50%);
+
+    min-width: 280px;
+    max-width: 90%;
+
+    padding: 14px 28px;
+
+    background-color: rgba(0, 0, 0, 0.88);
+    border: 2px solid #b71c46;
+    border-radius: 4px;
+
+    color: white;
+    font-size: 18px;
+    text-align: center;
+
+    pointer-events: none;
+}
+
+
+/* ========================================
+   Phase 1-10B-⑤: 조사 대상 위치 및 디자인
+======================================== */
+
+/* 조사 대상 공통 디자인 */
+.investigation-hotspot {
+    position: absolute;
+
+    transform: translate(-50%, -50%);
+
+    padding: 10px 16px;
+
+    background-color: rgba(0, 0, 0, 0.82);
+    border: 2px solid #b71c46;
+    border-radius: 24px;
+
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    /* 조사 대상 버튼만 마우스 입력 허용 */
+    pointer-events: auto;
+
+    z-index: 11;
+
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease;
+}
+
+/* 마우스 호버 */
+.investigation-hotspot:hover {
+    background-color: rgba(110, 23, 51, 0.95);
+    border-color: #ff4775;
+}
+
+/* 키보드 포커스 */
+.investigation-hotspot:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 3px;
+}
+
+/* 책상 */
+.investigation-hotspot[data-target-id="desk"] {
+    left: 63%;
+    top: 78%;
+}
+
+/* 칠판 */
+.investigation-hotspot[data-target-id="blackboard"] {
+    left: 58%;
+    top: 44%;
+}
+
+/* 교실 문 */
+.investigation-hotspot[data-target-id="door"] {
+    left: 90%;
+    top: 45%;
+}
+
+/* Phase 1-10B-⑤-A: 철판으로 막힌 창문 */
+.investigation-hotspot[data-target-id="window"] {
+    left: 12%;
+    top: 43%;
 }

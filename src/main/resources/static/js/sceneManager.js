@@ -4,13 +4,15 @@ export class SceneManager {
 	    dialogueManager,
 	    transitionManager,
 	    visualManager,
-	    gameStateManager
+	    gameStateManager,
+		investigationManager
 	) {
 
         this.dialogueManager = dialogueManager;
         this.transitionManager = transitionManager;
 		this.visualManager = visualManager;
 		this.gameStateManager = gameStateManager;
+		this.investigationManager = investigationManager;
 		
         this.currentScene = null;
 
@@ -250,6 +252,28 @@ export class SceneManager {
 	    if (completedScene) {
 	        this.gameStateManager.completeEvent(completedScene);
 	    }
+
+		// Phase 1-10A-④: 조사 모드 진입
+		const nextMode = this.currentScene?.nextMode;
+
+		if (nextMode?.type === "investigation") {
+
+			const started =
+				this.investigationManager.startInvestigation(
+					nextMode.investigationId
+				);
+
+			if (!started) {
+				console.error("조사 모드 시작 실패");
+				return;
+			}
+
+			console.log(
+				"SceneManager → InvestigationManager 연결 성공"
+			);
+
+			return;
+		}
 
 	    const nextEvent = this.currentScene?.nextEvent;
 

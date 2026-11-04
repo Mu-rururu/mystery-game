@@ -6,6 +6,7 @@ import { TransitionManager } from "./transition.js";
 import { SceneManager } from "./sceneManager.js";
 import { DialogueLogManager } from "./dialogueLogManager.js";
 import { SaveManager } from "./saveManager.js";
+import { InvestigationManager } from "./investigationManager.js";
 
 // ========================================
 // HTML 요소
@@ -19,6 +20,14 @@ const gameScreen =
 
 const startButton =
     document.getElementById("start-button");
+
+// CONTINUE 버튼
+const continueButton =
+    document.getElementById("continue-button");
+
+// 마지막 저장 시각 표시 영역
+const lastSaveTime =
+    document.getElementById("last-save-time");
 
 // SAVE 버튼
 const saveButton =
@@ -62,6 +71,9 @@ const dialogueLogManager = new DialogueLogManager();
 
 const saveManager = new SaveManager();
 
+// Phase 1-10A-④: 조사 시스템 관리자
+const investigationManager = new InvestigationManager();
+
 const visualManager = new VisualManager(
     characterElement,
     gameScreen
@@ -79,17 +91,72 @@ const dialogueManager = new DialogueManager(
 	dialogueLogManager
 );
 
+// Phase 1-10C-④-B: 조사 시스템과 대화 시스템 연결
+investigationManager.dialogueManager = dialogueManager;
+
 const transitionManager = new TransitionManager(transitionOverlay);
 
 const sceneManager = new SceneManager(
     dialogueManager,
     transitionManager,
     visualManager,
-    gameStateManager
+    gameStateManager,
+    investigationManager
 );
 
 // 대화 기록창 열림 여부
 let isLogOpen = false;
+
+// CONTINUE 버튼 및 마지막 저장 시각 갱신
+function updateContinueButton() {
+
+    const saveData = saveManager.load();
+
+    const hasSave = !!(
+        saveData &&
+        saveData.data &&
+        saveData.data.gameState &&
+        Array.isArray(saveData.data.dialogueLogs) &&
+        saveData.data.dialogueProgress
+    );
+
+    continueButton.disabled = !hasSave;
+
+    // 저장 정보가 없으면 시각 표시 숨기기
+    if (!hasSave || !saveData.savedAt) {
+        lastSaveTime.textContent = "";
+        lastSaveTime.classList.add("hidden");
+        return;
+    }
+
+    const savedDate = new Date(saveData.savedAt);
+
+    // 저장 시각이 올바르지 않은 경우
+    if (Number.isNaN(savedDate.getTime())) {
+        lastSaveTime.textContent = "";
+        lastSaveTime.classList.add("hidden");
+        return;
+    }
+
+    // 한국 시간 형식으로 출력
+    const formattedTime = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    }).format(savedDate);
+
+    lastSaveTime.textContent =
+        `마지막 저장: ${formattedTime}`;
+
+    lastSaveTime.classList.remove("hidden");
+}
+
+// 최초 타이틀 화면에서 저장 데이터 확인
+updateContinueButton();
 
 // ========================================
 // 게임 시작
@@ -252,6 +319,20 @@ function saveGame() {
         dialogueProgress: dialogueProgress
     };
 
+    // 기존 저장 데이터가 있다면 덮어쓰기 확인
+    const existingSave = saveManager.load();
+
+    if (existingSave) {
+        const confirmed = confirm(
+            "기존 저장 데이터를 덮어쓰시겠습니까?"
+        );
+
+        if (!confirmed) {
+            console.log("저장을 취소했습니다.");
+            return false;
+        }
+    }
+
     // 실제 저장 실행
     const saved = saveManager.save(saveData);
 
@@ -295,6 +376,17 @@ async function loadGame() {
     if (!saveData || !saveData.data) {
         console.warn("불러올 저장 데이터가 없습니다.");
         alert("저장된 게임이 없습니다.");
+        return false;
+    }
+
+    // 저장된 게임을 불러오기 전에 확인
+    const confirmed = confirm(
+        "저장된 게임을 불러오시겠습니까?\n\n" +
+        "저장하지 않은 현재 진행 상황은 사라집니다."
+    );
+
+    if (!confirmed) {
+        console.log("불러오기를 취소했습니다.");
         return false;
     }
 
@@ -497,6 +589,9 @@ function closeDialogueLog() {
 
 startButton.addEventListener("click", startGame);
 
+// CONTINUE 버튼
+continueButton.addEventListener("click", continueGame);
+
 // SAVE 버튼
 saveButton.addEventListener("click", saveGame);
 
@@ -505,14 +600,56 @@ loadButton.addEventListener("click", loadGame);
 
 dialogueBox.addEventListener("click", () => {
 
+    // 일반 스토리 또는 조사 대사 출력 중에만 진행 허용
+    const canAdvanceDialogue =
+        sceneManager.isActive ||
+        (
+            investigationManager.isActive &&
+            investigationManager.isShowingInvestigationDialogue
+        );
+
     if (
         isLogOpen ||
         sceneManager.isLoading ||
-        !sceneManager.isActive ||
+        !canAdvanceDialogue ||
         transitionManager.isTransitioning
     ) {
         return;
     }
+
+    dialogueManager.next();
+});
+
+document.addEventListener("keydown", (event) => {
+    // 스페이스바만 처리
+    if (event.code !== "Space") return;
+
+    // 버튼이나 입력창에 포커스가 있을 때는 무시
+    const activeElement = document.activeElement;
+
+    if (
+        activeElement?.matches(
+            "button, input, textarea, select, [contenteditable]"
+        )
+    ) return;
+
+    // 스페이스바의 기본 스크롤 동작 방지
+    event.preventDefault();
+
+    // 키를 누르고 있을 때 반복 입력 방지
+    if (event.repeat) return;
+
+    const canAdvanceDialogue =
+        sceneManager.isActive ||
+        (investigationManager.isActive &&
+            investigationManager.isShowingInvestigationDialogue);
+
+    if (
+        isLogOpen ||
+        sceneManager.isLoading ||
+        !canAdvanceDialogue ||
+        transitionManager.isTransitioning
+    ) return;
 
     dialogueManager.next();
 });
@@ -584,3 +721,5 @@ window.testRestoreSave = function() {
 window.sceneManager = sceneManager;
 // Phase 1-9C-④: CONTINUE 테스트용
 window.continueGame = continueGame;
+// Phase 1-10A-④: 조사 상태 확인용
+window.investigationManager = investigationManager;
